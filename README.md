@@ -5,4 +5,5 @@ This app was originally created by Fabian Dablander for this blog post: http://a
 All credit to Fabian for that awesome app!
 
 Currently I am working on adding prior and posterior distributions, as well as calculating bayesfactors and credible intervals.
-Please don't share without asking first :)
+
+Feel free to share but please let me know if you do, since it is not finished yet. :)
