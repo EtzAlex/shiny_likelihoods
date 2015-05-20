@@ -2,7 +2,7 @@
 ## Output consists of a plot and various statistics
 ## PS and PF determine the shape of the prior distribution.
 ## PS = prior success, PF = prior failure for beta dist. 
-## PS = 1, PF = 1 corresponds to uniform(0,1) and is default. If left at default, prior will be equivalent to likelihood
+## PS = 1, PF = 1 corresponds to uniform(0,1) and is default. If left at default, posterior will be equivalent to likelihood
 ## k = number of observed successes in the data, n = total trials. If left at 0 only plots the prior dist.
 ## null = Is there a point-null hypothesis? null = NULL leaves it out of plots and calcs
 
