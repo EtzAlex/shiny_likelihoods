@@ -13,9 +13,9 @@
 
 
 ## The function
-plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = NULL, CI = NULL, null = NULL){
+plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = NULL, CI = NULL, null = NULL, xlow = "auto", xup = "auto", xby = "auto"){
         
-        w <- seq(from=priorMean-15*priorSD, to=priorMean+15*priorSD, by=priorSD/1000) ##Set up for distributions
+        w <- seq(from=priorMean-100*priorSD, to=priorMean+100*priorSD, by=priorSD/100) ##Set up for distributions
         y1 <- dnorm(w, priorMean, priorSD) ## data for plotting prior curve
         
         if(is.numeric(sampleMean) == T){
@@ -32,26 +32,63 @@ plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = 
         }
         
         
-        ##Defining y axis limits and ticks
-        ##If there is sample data, base graphic dimensions off of posterior scale
+        ##Defining x axis limits and ticks
+        ##If there is sample data, and automatic xlow, base lower x dimensions off of posterior scale
+        if(is.numeric(sampleMean) == T && is.numeric(xlow) == F){
+                xlower <- qnorm(.005, postMean, postSD)
+                
+                        ##if the null is off the plot, rescale so that the null is the new end point
+                        if(is.numeric(null) == T && null < xlower){
+                                xlower <- null
+                                }
+                }
+        ##If there is no sample data, use the prior distribution for scale
+        if(is.numeric(sampleMean) == F && is.numeric(xlow) == F){
+                xlower <- qnorm(.001,priorMean,priorSD)
+                }
+        ##If there is user specified x lower limit, use that above all else
+        if(is.numeric(xlow) == T){
+                xlower <- xlow
+                }
+        
+        ## Specifying xupper limits similarly
+        if(is.numeric(sampleMean) == T && is.numeric(xup) == F){
+                xupper <- qnorm(.995, postMean, postSD)
+                        
+                        if(is.numeric(null) == T && null > xupper){
+                                        xupper <- null
+                                        }
+                }
+        if(is.numeric(sampleMean) == F && is.numeric(xup) == F){
+                        xupper <- qnorm(.999,priorMean,priorSD)
+                }
+        if(is.numeric(xup) == T){
+                        xupper <- xup
+                }
+             
+                
+        ##Set up y-axis automatically. If there is sample data, base y-axis off posterior.   
         if(is.numeric(sampleMean) == T){
                 yupper <- 1.25 * max(y1,y2,y3)
                 ylower <- 0
-                xlower <- qnorm(.005, postMean, postSD)
-                xupper <- qnorm(.995, postMean, postSD)
+               
         }
-        
-        ##If there is no sample data, base dimensions off of prior scale
+        ##If there is no sample data, base y axis dimensions off of prior scale
         else{
                 yupper <- 1.25 * max(y1)
                 ylower <- 0
-                xlower <- qnorm(.001,priorMean,priorSD)
-                xupper <- qnorm(.999,priorMean,priorSD)
         }
         
-        xlims <- pretty(c(xlower,xupper)) ##To be used for x axis ticks
-        ylims <- pretty(c(ylower,yupper)) ##To be used for y axis ticks
-        xrange <- max(xlims)-min(xlims)
+        ## If the x dmiensions are *all* manually set, create tick marks based on user preference
+        if(is.numeric(xby) == T && is.numeric(xlow) == T && is.numeric(xup) == T){
+                xlims <- seq(xlower,xupper, xby)
+        }
+        ## If the user doesn't specify *all* aspects of x-axis, use pretty() to set x-axis tick marks roughly at user preference
+        else{
+                xlims <- pretty(c(xlower,xupper)) 
+        }
+        ylims <- pretty(c(ylower,yupper)) ##To be used for y axis ticks, no user preference allowed
+        xrange <- max(xlims)-min(xlims) ##For some easier inputs later
         
         ##Plot only the prior distribution if there is no sample data. Notice the titles are different
         if(is.numeric(sampleMean) == F){
@@ -65,7 +102,7 @@ plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = 
                
         }
         
-        ##Plot all three distributions if there is sample data. Notice the titles and x axis caption are different
+        ##Plot all three distributions if there is sample data. Notice the titles and x axis caption are different than if it's just a prior
         if(is.numeric(sampleMean) == T){
                 plot(w[w > (min(xlims) - .02 * xrange)], y1[w > (min(xlims) - .02 * xrange)], xlim= c(min(xlims),max(xlims)), 
                 ylim=c(0,max(ylims)), type = "l", ylab= "Density", xlab= "Mu", las=1,lwd=3, lty = 2,
@@ -92,12 +129,12 @@ plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = 
                        pch = 21, bg = "blue", cex = 1.5) #adds point to prior
                 points(null, dnorm(null, postMean, postSD), 
                        pch = 21, bg = "darkorchid", cex = 1.5) #adds point to posterior
-                lines(c(0,0),c(0,1.15*max(y1,y2,y3)), lwd=1, lty = 5, col ="grey73")##adds vertical line at null value
+                lines(c(null,null),c(-.02 * (max(ylims)),1.11*max(y1,y2,y3)), lwd=1, lty = 5, col ="grey73")##adds vertical line at null value
                 ##Calculate BF using Savage-Dickey density ratio
                 null.H0 <- dnorm(null, priorMean, priorSD)
                 null.H1 <- dnorm(null, postMean, postSD)
                 return( list("BF01 (in favor of H0)" = round(null.H1/null.H0,2), "BF10 (in favor of H1)" = round(null.H0/null.H1,2), 
-                             "Posterior Mean" = round(postMean,2), "Posterior SD" = round(postSD,2)))
+                             "Posterior Mean" = round(postMean,3), "Posterior SD" = round(postSD,3)))
         }
                 
         ##If there is sample data, a CI cutoff, but no null value, only return posterior descriptives and shade graph
@@ -119,8 +156,8 @@ plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = 
                 cord.yy <- c(0,dnorm(SEQhigh,postMean, postSD), 0)
                 polygon(cord.xx,cord.yy,col='orchid', lty=3) ##shade right tail
                 
-                return( list("Posterior Mean" = round(postMean,2), "Posterior SD" = round(postSD,2), 
-                             "Posterior 95% CI lower" = round(CI.low,2), "Posterior 95% CI upper" = round(CI.high,2)))
+                return( list("Posterior Mean" = round(postMean,3), "Posterior SD" = round(postSD,3), 
+                             "Posterior CI lower" = round(CI.low,3), "Posterior CI upper" = round(CI.high,3)))
         }
         
         ##If there is sample data and a null value, add null line, null points,
@@ -154,8 +191,8 @@ plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = 
                 null.H1 <- dnorm(null, postMean, postSD)
                 
                 return( list("BF01 (in favor of H0)" = round(null.H1/null.H0,2), "BF10 (in favor of H1)" = round(null.H0/null.H1,2), 
-                             "Posterior Mean" = round(postMean,2), "Posterior SD" = round(postSD,2), 
-                             "Posterior 95% CI lower" = round(CI.low,2), "Posterior 95% CI upper" = round(CI.high,2)))
+                             "Posterior Mean" = round(postMean,3), "Posterior SD" = round(postSD,3), 
+                             "Posterior CI lower" = round(CI.low,3), "Posterior CI upper" = round(CI.high,3)))
         }
        
 }
