@@ -15,13 +15,13 @@
 ## The function
 plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = NULL, CI = NULL, null = NULL, xlow = "auto", xup = "auto", xby = "auto"){
         
-        w <- seq(from=priorMean-100*priorSD, to=priorMean+100*priorSD, by=priorSD/100) ##Set up for distributions
+        w <- seq(from=priorMean-100*priorSD, to=priorMean+100*priorSD, by=min(priorSD,sampleSE)/100) ##Set up for distributions
         y1 <- dnorm(w, priorMean, priorSD) ## data for plotting prior curve
         
         if(is.numeric(sampleMean) == T){
                 y2 <- dnorm(w, sampleMean, sampleSE) ## data for plotting likelihood curve
                 
-                ##Calculate and prepare to plot posterior distribution
+##Calculate and prepare to plot posterior distribution
                 priorPrec <- (1/priorSD)^2 ## prior precision, 1 / sigma^2
                 dataPrec <- (1/sampleSE)^2 ## data (likelihood) precision, 1 / SE^2
                 postPrec <- priorPrec + dataPrec 
@@ -93,7 +93,7 @@ plot.norm <- function(priorMean = 0, priorSD = 1, sampleMean = NULL, sampleSE = 
         ##Plot only the prior distribution if there is no sample data. Notice the titles are different
         if(is.numeric(sampleMean) == F){
         plot(w, y1, xlim= c(min(xlims),max(xlims)), ylim=c(ylower,max(ylims)), type = "l", ylab= "Density",
-             xlab= "Mu", las=1, main="Prior distribution with normal shape",lwd=5,
+             xlab= "Mu", las=1, main="Prior distribution with normal shape",lwd=3, lty =2,
              cex.lab=1.5, cex.main=1.5, col = "skyblue",axes=F)
         
         #Format the axes so they look good
